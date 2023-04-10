@@ -1,35 +1,65 @@
-name: Build da etapa de  frontend
-
-defaults:
-  run:
-    working-directory: "frontend/"
+name: Build frontend app
 
 on:
   workflow_dispatch:
   push:
     branches:
-    - frontend
+      - front2
     paths:
-    - 'frontend/**'
+      - '.github/workflows/frontend.ci.yml'
+
+
+env:
+  USER: ${{ github.actor }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN2 }}
+  REGISTRY: ghcr.io
+  IMAGE_NAME: bootcamp-frontend
+  IMAGE_VERSION: 1.0.0
 
 
 jobs:
-  TestandDeploy:
-    name: Test frontend aplication and build docker image
-    runs-on: self-hosted
+
+  build_node:
+    runs-on: ubuntu-latest
+
 
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Running tests
-      run: |
-        
-        apt-get update && apt-get -y install npm
-        npm install -g @angular/cli
-        ng test
-
-    - name: Build docker image
-      run: |
-        docker build -t frontend-app:latest .
+    - name: Checkout do repositório
+      uses: actions/checkout@v2
 
 
+    - name: Atualizar repositórios do sistema
+      run: sudo apt-get update
+
+
+    - name: Instalar npm
+      run: sudo apt-get -y install npm
+
+    - name: Instalar Angular CLI
+      run: sudo npm install -g @angular/cli
+
+  #  - name: Executar testes
+ #   run: ng test
+
+  docker_build_and_push:
+    needs: build_node
+    name: Build and deploy Frontend with Docker
+    runs-on: self-hosted
+    permissions:
+      packages: write
+
+    steps:
+    - name: Log into registry ${{ env.REGISTRY }}
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ env.GH_TOKEN }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
