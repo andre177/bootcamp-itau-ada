@@ -47,4 +47,5 @@ $ mvn clean package
 4. Não apagar as branches que foram usadas no projeto após finalizar as Pull Requests;
 5. Lembrem-se, o objetivo aqui não é testar vocês, e sim botar em prática os conhecimentos que adiquirimos juntos!
 
+
 ### Divirtam-se!!! :hugs:
